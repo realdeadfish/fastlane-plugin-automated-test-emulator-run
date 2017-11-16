@@ -1,5 +1,6 @@
 require 'open3'
 require 'json'
+require "thwait"
 
 module Fastlane
   module Actions
@@ -207,6 +208,7 @@ module Fastlane
 
             if calabash_task
               UI.message("Using Calabash task.".green)
+              threads = []
               calabash_task = calabash_task.split(';')
               primary_run_command = calabash_task.shift
               rerun_command = calabash_task.shift
@@ -216,9 +218,14 @@ module Fastlane
               end
 
               calabash_task.zip(avd_schemes).each do |test_suite, scheme|
-                Thread.new do
-                  Action.sh("EMULATORS_NAME=emulator-#{scheme.launch_avd_port} #{primary_run_command} #{test_suite.strip} #{rerun_command}")
-                end
+                  emulator_name = "emulator-#{scheme.launch_avd_port}"
+                  threads << Thread.new {
+                    Action.sh("ADB_DEVICE_ARG=#{emulator_name} #{primary_run_command}#{test_suite.strip} #{rerun_command}")
+                  }
+              end
+
+              ThreadsWait.all_waits(threads) do |t|
+                puts "#{t} complete."
               end
             end
 
