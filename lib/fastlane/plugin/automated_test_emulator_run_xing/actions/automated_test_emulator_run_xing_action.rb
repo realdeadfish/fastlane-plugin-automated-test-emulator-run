@@ -101,7 +101,7 @@ module Fastlane
 
             # Wait for AVDs finish booting
             UI.message("Waiting for AVDs to finish booting.".yellow)
-            UI.message("Performig wait for ADB boot".yellow)
+            UI.message("Performing wait for ADB boot".yellow)
             adb_launch_complete = wait_for_emulator_boot_by_adb(adb_controller, avd_schemes, "#{params[:AVD_adb_launch_timeout]}")
 
             # Wait for AVD params finish booting
@@ -149,6 +149,13 @@ module Fastlane
 
             if all_avd_launched
               UI.message("AVDs Booted!".green)
+              if params[:logcat]
+                for i in 0...avd_schemes.length
+                  device = ["emulator-", avd_schemes[i].launch_avd_port].join('')
+                  cmd = [adb_controller.adb_path, '-s', device, 'logcat -c'].join(' ')
+                  Action.sh(cmd) unless devices.match(device).nil?
+                end
+              end
             else
               for i in 0...avd_schemes.length
                 if params[:verbose]
@@ -207,7 +214,13 @@ module Fastlane
             # Clean up
             for i in 0...avd_schemes.length
               # Kill all emulators
-              unless devices.match(["emulator-", avd_schemes[i].launch_avd_port].join("")).nil?
+              device = ["emulator-", avd_schemes[i].launch_avd_port].join("")
+              unless devices.match(device).nil?
+                if params[:logcat]
+                  file = [device, '.log'].join('')
+                  cmd = [adb_controller.adb_path, '-s', device, 'logcat -d >', file].join(' ')
+                  Action.sh(cmd)
+                end
                 Action.sh(avd_controllers[i].command_kill_device)
               end
 
@@ -478,6 +491,12 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :verbose,
                                        env_name: "AVD_VERBOSE",
                                        description: "Allows to turn on/off mode verbose which displays output of AVDs",
+                                       default_value: false,
+                                       is_string: false,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :logcat,
+                                       env_name: "ADB_LOGCAT",
+                                       description: "Allows to turn logcat on/off so you can debug crashes and such",
                                        default_value: false,
                                        is_string: false,
                                        optional: true),
