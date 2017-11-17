@@ -31,7 +31,8 @@ module Fastlane
                 UI.message([
                   "Unable to create output file for AVD:",
                   avd_schemes[i].avd_name + ".",
-                  "Output will be delegated to null and lost. Check your save/read permissions."].join(" ").red)
+                  "Output will be delegated to null and lost. Check your save/read permissions."
+                ].join(" ").red)
               end
             end
           end
@@ -41,7 +42,7 @@ module Fastlane
           adb_launch_complete = false
           param_launch_complete = false
 
-          while(!all_avd_launched)
+          while (!all_avd_launched)
             # Preparation
             UI.message("Configuring environment in order to launch emulators: ".yellow)
             UI.message("Getting avaliable AVDs".yellow)
@@ -175,9 +176,9 @@ module Fastlane
           end
 
           # Launching tests
-          shell_task = "#{params[:shell_task]}" unless params[:shell_task].nil?
-          gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
-          spoon_task = "#{params[:spoon_task]}" unless params[:spoon_task].nil?
+          shell_task = params[:shell_task].to_s unless params[:shell_task].nil?
+          gradle_task = params[:gradle_task].to_s unless params[:gradle_task].nil?
+          spoon_task = params[:spoon_task].to_s unless params[:spoon_task].nil?
 
           UI.message("Starting tests".green)
           begin
@@ -197,7 +198,7 @@ module Fastlane
               gradle = Helper::GradleHelper.new(gradle_path: Dir["./gradlew"].last)
 
               UI.message("Using spoon task.".green)
-              ports = Array.new
+              ports = []
               spoon_devices = " -PspoonDevice="
               spoon_devices = spoon_devices + "emulator-" + avd_schemes[0].launch_avd_port.to_s
               for i in 1...avd_schemes.length
@@ -206,7 +207,7 @@ module Fastlane
               end
 
               gradle_spoon_task = params[:spoon_task]
-              gradle_spoon_task = gradle_spoon_task + spoon_devices
+              gradle_spoon_task += spoon_devices
 
               gradle.trigger(task: gradle_spoon_task, flags: params[:gradle_flags], serial: nil)
             end
@@ -248,10 +249,10 @@ module Fastlane
         end
 
         def self.wait_for_emulator_boot_by_adb(adb_controller, avd_schemes, timeout)
-          timeoutInSeconds= timeout.to_i
+          timeout_in_seconds= timeout.to_i
           interval = 1000 * 10
-          startTime = Time.now
-          lastCheckTime = Time.now
+          start_time = Time.now
+          last_check_time = Time.now
           launch_status_hash = Hash.new
           device_visibility_hash = Hash.new
 
@@ -264,8 +265,8 @@ module Fastlane
           launch_status = false
           loop do
             currentTime = Time.now
-            if ((currentTime - lastCheckTime) * 1000) > interval
-              lastCheckTime = currentTime
+            if ((currentTime - last_check_time) * 1000) > interval
+              last_check_time = currentTime
               devices_output = Action.sh(adb_controller.command_get_devices)
 
               devices = ""
@@ -294,7 +295,7 @@ module Fastlane
               end
 
               # Quit if timeout reached
-              if ((currentTime - startTime) >= timeoutInSeconds)
+              if ((currentTime - start_time) >= timeout_in_seconds)
                 UI.message(["AVD ADB loading took more than ", timeout, ". Attempting to re-launch."].join("").red)
                 launch_status = false
                 break
