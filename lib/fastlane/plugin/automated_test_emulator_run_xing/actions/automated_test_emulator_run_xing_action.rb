@@ -211,6 +211,7 @@ module Fastlane
               threads = []
               calabash_task = calabash_task.split(';')
               primary_run_command = calabash_task.shift
+              secondary_command = calabash_task.shift
               rerun_command = calabash_task.shift
               if calabash_task.count > avd_schemes.count
                 UI.message("#{calabash_task.count} tasks were sent to executor. Shoudn't me more than #{avd_schemes.count}".red)
@@ -220,7 +221,7 @@ module Fastlane
               calabash_task.zip(avd_schemes).each do |test_suite, scheme|
                   emulator_name = "emulator-#{scheme.launch_avd_port}"
                   threads << Thread.new {
-                    Action.sh("ADB_DEVICE_ARG=#{emulator_name} #{primary_run_command}#{test_suite.strip} #{rerun_command}")
+                    Action.sh("ADB_DEVICE_ARG=#{emulator_name} ANDROID_SERIAL=#{emulator_name} #{primary_run_command}#{test_suite.strip} #{secondary_command} ADB_DEVICE_ARG=#{emulator_name} ANDROID_SERIAL=#{emulator_name} #{rerun_command}")
                   }
               end
 
