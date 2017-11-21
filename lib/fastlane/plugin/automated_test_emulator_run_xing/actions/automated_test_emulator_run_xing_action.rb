@@ -238,7 +238,7 @@ module Fastlane
               secondary_command = calabash_task.shift
               rerun_command = calabash_task.shift
               execution_file = calabash_task.first
-              emulator_name = "emulator-#{scheme.launch_avd_port}"
+              emulator_name = "emulator-#{avd_schemes.first.launch_avd_port}"
               Action.sh("ADB_DEVICE_ARG=#{emulator_name} ANDROID_SERIAL=#{emulator_name} #{primary_run_command}#{execution_file} #{secondary_command} ADB_DEVICE_ARG=#{emulator_name} ANDROID_SERIAL=#{emulator_name} #{rerun_command}")
             end
 
