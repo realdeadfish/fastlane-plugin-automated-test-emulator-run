@@ -206,8 +206,8 @@ module Fastlane
               gradle.trigger(task: gradle_spoon_task, flags: params[:gradle_flags], serial: nil)
             end
 
-            if calabash_task
-              UI.message("Using Calabash task.".green)
+            if calabash_task_parallel
+              UI.message("Using Calabash Parallel Task.".green)
               threads = []
               calabash_task = calabash_task.split(';')
               primary_run_command = calabash_task.shift
@@ -228,6 +228,17 @@ module Fastlane
               ThreadsWait.all_waits(threads) do |t|
                 puts "#{t} complete."
               end
+            end
+
+            if calabash_task
+              UI.message("Using Calabash Task.".green)
+              calabash_task = calabash_task.split(';')
+              primary_run_command = calabash_task.shift
+              secondary_command = calabash_task.shift
+              rerun_command = calabash_task.shift
+              execution_file = calabash_task.first
+              emulator_name = "emulator-#{scheme.launch_avd_port}"
+              Action.sh("ADB_DEVICE_ARG=#{emulator_name} ANDROID_SERIAL=#{emulator_name} #{primary_run_command}#{execution_file} #{secondary_command} ADB_DEVICE_ARG=#{emulator_name} ANDROID_SERIAL=#{emulator_name} #{rerun_command}")
             end
 
           ensure
