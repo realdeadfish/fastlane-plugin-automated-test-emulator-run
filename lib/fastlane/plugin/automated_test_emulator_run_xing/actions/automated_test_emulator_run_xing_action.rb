@@ -173,6 +173,7 @@ module Fastlane
           gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
           spoon_task = "#{params[:spoon_task]}" unless params[:spoon_task].nil?
           calabash_task = "#{params[:calabash_task]}" unless params[:calabash_task].nil?
+          calabash_task_parallel = "#{params[:calabash_task_parallel]}" unless params[:calabash_task_parallel].nil?
 
           UI.message("Starting tests".green)
           begin
@@ -209,16 +210,16 @@ module Fastlane
             if calabash_task_parallel
               UI.message("Using Calabash Parallel Task.".green)
               threads = []
-              calabash_task = calabash_task.split(';')
-              primary_run_command = calabash_task.shift
-              secondary_command = calabash_task.shift
-              rerun_command = calabash_task.shift
-              if calabash_task.count > avd_schemes.count
-                UI.message("#{calabash_task.count} tasks were sent to executor. Shoudn't me more than #{avd_schemes.count}".red)
+              calabash_task_parallel = calabash_task_parallel.split(';')
+              primary_run_command = calabash_task_parallel.shift
+              secondary_command = calabash_task_parallel.shift
+              rerun_command = calabash_task_parallel.shift
+              if calabash_task_parallel.count > avd_schemes.count
+                UI.message("#{calabash_task_parallel.count} tasks were sent to executor. Shoudn't me more than #{avd_schemes.count}".red)
                 return
               end
 
-              calabash_task.zip(avd_schemes).each do |test_suite, scheme|
+              calabash_task_parallel.zip(avd_schemes).each do |test_suite, scheme|
                   emulator_name = "emulator-#{scheme.launch_avd_port}"
                   threads << Thread.new {
                     Action.sh("ADB_DEVICE_ARG=#{emulator_name} ANDROID_SERIAL=#{emulator_name} #{primary_run_command}#{test_suite.strip} #{secondary_command} ADB_DEVICE_ARG=#{emulator_name} ANDROID_SERIAL=#{emulator_name} #{rerun_command}")
@@ -513,6 +514,12 @@ module Fastlane
                                       optional: true),
           FastlaneCore::ConfigItem.new(key: :calabash_task,
                                        env_name: "calabash_task",
+                                       description: "The calabash task you want to execute",
+                                       conflicting_options: [:shell_command],
+                                       is_string: true,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :calabash_task_parallel,
+                                       env_name: "calabash_task_parallel",
                                        description: "The calabash task you want to execute",
                                        conflicting_options: [:shell_command],
                                        is_string: true,
