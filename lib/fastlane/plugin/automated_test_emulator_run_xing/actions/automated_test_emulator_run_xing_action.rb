@@ -7,7 +7,7 @@ module Fastlane
 
       class AutomatedTestEmulatorRunXingAction < Action
 
-        def sh_error_handling(command)
+        def self.sh_error_handling(command)
           Action.sh(command)
         rescue => e
           puts "Failed with #{e}. Will retry in 10 seconds"
