@@ -10,8 +10,8 @@ module Fastlane
         def self.sh_error_handling(command)
           Action.sh(command)
         rescue => e
-          puts "Failed with #{e}. Will retry in 10 seconds"
-          sleep 10
+          puts "Failed with #{e}. Will retry in 1 minute"
+          sleep 60
           Action.sh(command)
         end
 
