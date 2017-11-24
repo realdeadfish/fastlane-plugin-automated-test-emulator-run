@@ -6,6 +6,15 @@ module Fastlane
   module Actions
 
       class AutomatedTestEmulatorRunXingAction < Action
+
+        def sh_error_handling(command)
+          Action.sh(command)
+        rescue => e
+          puts "Failed with #{e}. Will retry in 10 seconds"
+          sleep 10
+          Action.sh(command)
+        end
+
         def self.run(params)
           UI.message("The automated_test_emulator_run plugin is working!")
 
@@ -46,7 +55,7 @@ module Fastlane
             # Preparation
             UI.message("Configuring environment in order to launch emulators: ".yellow)
             UI.message("Getting avaliable AVDs".yellow)
-            devices = Action.sh(adb_controller.command_get_avds)
+            devices = sh_error_handling(adb_controller.command_get_avds)
 
             for i in 0...avd_schemes.length
               unless devices.match(avd_schemes[i].avd_name).nil?
@@ -55,11 +64,11 @@ module Fastlane
                   # Delete existing AVDs
                   UI.message("AVD_create_new parameter set to true.".yellow)
                   UI.message(["Deleting existing AVD with name:", avd_schemes[i].avd_name].join(" ").yellow)
-                  Action.sh(avd_controllers[i].command_delete_avd)
+                  sh_error_handling(avd_controllers[i].command_delete_avd)
 
                   # Re-create AVD
                   UI.message(["Re-creating new AVD."].join(" ").yellow)
-                  Action.sh(avd_controllers[i].command_create_avd)
+                  sh_error_handling(avd_controllers[i].command_create_avd)
                 else
                   # Use existing AVD
                   UI.message("AVD_recreate_new parameter set to false.".yellow)
@@ -68,15 +77,15 @@ module Fastlane
               else
                 # Create AVD
                 UI.message(["AVD with name '", avd_schemes[i].avd_name, "' does not exist. Creating new AVD."].join("").yellow)
-                Action.sh(avd_controllers[i].command_create_avd)
+                sh_error_handling(avd_controllers[i].command_create_avd)
               end
             end
 
             # Restart ADB
             if params[:ADB_restart]
               UI.message("Restarting adb".yellow)
-              Action.sh(adb_controller.command_stop)
-              Action.sh(adb_controller.command_start)
+              sh_error_handling(adb_controller.command_stop)
+              sh_error_handling(adb_controller.command_start)
             else
               UI.message("ADB won't be restarted. 'ADB_restart' set to false.".yellow)
             end
@@ -88,7 +97,7 @@ module Fastlane
                  UI.message(["No config file found for AVD '", avd_schemes[i].avd_name, "'. AVD won't have config.ini applied."].join("").yellow)
               else
                 UI.message(["Config file found! Applying custom config to: ", avd_schemes[i].avd_name].join("").yellow)
-                Action.sh(avd_controllers[i].command_apply_config_avd)
+                sh_error_handling(avd_controllers[i].command_apply_config_avd)
               end
             end
 
@@ -96,7 +105,7 @@ module Fastlane
             UI.message("Launching all AVDs at the same time.".yellow)
             for i in 0...avd_controllers.length
               Process.fork do
-                Action.sh(avd_controllers[i].command_start_avd)
+                sh_error_handling(avd_controllers[i].command_start_avd)
               end
             end
 
