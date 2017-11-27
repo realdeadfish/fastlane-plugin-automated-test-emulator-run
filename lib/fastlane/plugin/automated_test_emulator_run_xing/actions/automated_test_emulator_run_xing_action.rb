@@ -90,6 +90,19 @@ module Fastlane
               UI.message("ADB won't be restarted. 'ADB_restart' set to false.".yellow)
             end
 
+            # Kill emulators that are already listed in adb with the same name as new emulator
+            if params[:ADB_kill_duplicates]
+              UI.message("Checking for duplicates in adb")
+              avd_schemes.each do |device|
+                new_params = params.clone
+                new_params[:emu_name] = device.avd_name
+                begin
+                  Action.sh(Factory::AdbControllerFactory.get_adb_controller(new_params).command_kill_emu)
+                rescue
+                end
+              end
+            end
+
             # Applying custom configs (it's not done directly after create because 'cat' operation seems to fail overwrite)
             for i in 0...avd_schemes.length
               UI.message(["Attemting to apply custom config to ", avd_schemes[i].avd_name].join("").yellow)
@@ -473,6 +486,18 @@ module Fastlane
                                        env_name: "ADB_RESTART",
                                        description: "Allows to switch adb restarting on/off",
                                        default_value: true,
+                                       is_string: false,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :emu_name,
+                                       env_name: "EMU_NAME",
+                                       description: "Current emulator name",
+                                       default_value: nil,
+                                       is_string: true,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :ADB_kill_duplicates,
+                                       env_name: "ADB_KILL_DUPLICATES",
+                                       description: "Allows to switch adb kill duplicates on/off",
+                                       default_value: false,
                                        is_string: false,
                                        optional: true),
           FastlaneCore::ConfigItem.new(key: :AVD_wait_for_bootcomplete,

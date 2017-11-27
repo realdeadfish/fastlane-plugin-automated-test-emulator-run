@@ -1,5 +1,5 @@
 module Fastlane
   module AutomatedTestEmulatorRunXing
-    VERSION = "1.0.19"
+    VERSION = "1.0.26"
   end
 end

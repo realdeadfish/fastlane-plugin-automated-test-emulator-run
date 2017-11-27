@@ -2,14 +2,13 @@ module Fastlane
   module Factory
 
     class ADB_Controller
-      attr_accessor :command_stop, :command_start, :command_get_devices, :command_wait_for_device, :command_get_avds
+      attr_accessor :command_stop, :command_start, :command_get_devices, :command_wait_for_device, :command_get_avds, :command_kill_emu
     end
 
     class AdbControllerFactory
   
         def self.get_adb_controller(params)
           UI.message(["Preparing commands for Android ADB"].join(" ").yellow)
-
           # Get paths
           path_sdk = "#{params[:SDK_path]}"
           path_avdmanager_binary = path_sdk + "/tools/bin/avdmanager"
@@ -21,6 +20,7 @@ module Fastlane
           sh_devices_adb = "devices"
           sh_wait_for_device_adb = "wait-for-device"
           sh_list_avd_adb = "list avd"
+          sh_kill_emu = "emu kill"
 
           # Assemble ADB controller
           adb_controller = ADB_Controller.new
@@ -43,6 +43,15 @@ module Fastlane
            path_adb,
            sh_wait_for_device_adb
            ].join(" ")
+
+          adb_controller.command_kill_emu = [
+              "[[ $(#{path_adb} devices) =~ #{params[:emu_name]} ]] &&",
+              path_adb,
+              "-s",
+              params[:emu_name],
+              sh_kill_emu,
+              "&& echo #{params[:emu_name]} was killed"
+          ].join(" ")
 
           adb_controller.command_get_avds = [
            path_avdmanager_binary, 
