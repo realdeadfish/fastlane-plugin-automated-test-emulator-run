@@ -178,6 +178,7 @@ module Fastlane
           shell_task = "#{params[:shell_task]}" unless params[:shell_task].nil?
           gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
           spoon_task = "#{params[:spoon_task]}" unless params[:spoon_task].nil?
+          gradle_path = (params[gradle_path].blank? ? "./gradlew" : "#{params[gradle_path]}")
 
           UI.message("Starting tests".green)
           begin
@@ -187,14 +188,14 @@ module Fastlane
             end
 
             unless gradle_task.nil?
-              gradle = Helper::GradleHelper.new(gradle_path: Dir["./gradlew"].last)
+              gradle = Helper::GradleHelper.new(gradle_path: Dir[gradle_path].last)
 
               UI.message("Using gradle task.".green)
               gradle.trigger(task: params[:gradle_task], flags: params[:gradle_flags], serial: nil)
             end
 
             unless spoon_task.nil?
-              gradle = Helper::GradleHelper.new(gradle_path: Dir["./gradlew"].last)
+              gradle = Helper::GradleHelper.new(gradle_path: Dir[gradle_path].last)
 
               UI.message("Using spoon task.".green)
               ports = Array.new
